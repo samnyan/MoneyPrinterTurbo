@@ -503,19 +503,24 @@ with left_panel:
         params.video_script = st.text_area(
             tr("Video Script"), key="video_script", height=280
         )
-        if st.button(tr("Generate Video Keywords"), key="auto_generate_terms"):
-            if not params.video_script:
-                st.error(tr("Please Enter the Video Subject"))
-                st.stop()
 
-            with st.spinner(tr("Generating Video Keywords")):
-                terms = llm.generate_terms(params.video_subject, params.video_script)
-                if "Error: " in terms:
-                    st.error(tr(terms))
-                else:
-                    st.session_state["video_terms"] = ", ".join(terms)
+        if params.video_source != "local":
 
-        params.video_terms = st.text_area(tr("Video Keywords"), key="video_terms")
+            if st.button(tr("Generate Video Keywords"), key="auto_generate_terms"):
+                if not params.video_script:
+                    st.error(tr("Please Enter the Video Subject"))
+                    st.stop()
+
+                with st.spinner(tr("Generating Video Keywords")):
+                    terms = llm.generate_terms(
+                        params.video_subject, params.video_script
+                    )
+                    if "Error: " in terms:
+                        st.error(tr(terms))
+                    else:
+                        st.session_state["video_terms"] = ", ".join(terms)
+
+            params.video_terms = st.text_area(tr("Video Keywords"), key="video_terms")
 
 with middle_panel:
     with st.container(border=True):
