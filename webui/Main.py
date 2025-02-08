@@ -67,17 +67,6 @@ system_locale = utils.get_system_locale()
 # print(f"******** system locale: {system_locale} ********")
 
 
-def set_session_state(name, default=""):
-    if name not in st.session_state:
-        st.session_state[name] = default
-
-
-set_session_state("video_subject")
-set_session_state("video_script")
-set_session_state("video_terms")
-set_session_state("ui_language", config.ui.get("language", system_locale))
-
-
 def get_all_fonts():
     fonts = []
     for root, dirs, files in os.walk(font_dir):
@@ -167,6 +156,63 @@ locales = utils.load_locales(i18n_dir)
 def tr(key):
     loc = locales.get(st.session_state["ui_language"], {})
     return loc.get("Translation", {}).get(key, key)
+
+
+font_names = get_all_fonts()
+
+
+def set_session_state(name, default=None):
+    if name not in st.session_state:
+        st.session_state[name] = default
+
+
+# Initialize session state
+
+set_session_state("ui_language", config.ui.get("language", system_locale))
+
+set_session_state("video_subject", "")
+set_session_state("video_script", "")
+set_session_state("video_terms", "")
+set_session_state("video_language", "")
+set_session_state("video_source", "pexels")
+set_session_state("video_concat_mode", "random")
+set_session_state("video_transition_mode", VideoTransitionMode.none.value)
+set_session_state("video_aspect", VideoAspect.portrait.value)
+set_session_state("video_clip_duration", 3)
+set_session_state("video_count", 1)
+
+voices = voice.get_all_azure_voices(filter_locals=support_locales)
+friendly_names = {
+    v: v.replace("Female", tr("Female"))
+    .replace("Male", tr("Male"))
+    .replace("Neural", "")
+    for v in voices
+}
+default_voice_name = friendly_names.get("zh-CN-XiaoxiaoNeural-Female", None)
+if config.ui.get("voice_name", "") in friendly_names:
+    default_voice_name = friendly_names.get(config.ui.get("voice_name"))
+set_session_state("voice_name", default_voice_name)
+
+set_session_state("voice_volume", 1.0)
+set_session_state("voice_rate", 1.0)
+
+set_session_state("bgm_type", "random")
+set_session_state("bgm_volume", 0.2)
+set_session_state("subtitle_enabled", True)
+
+default_font_name = None
+if config.ui.get("font_name", None) in font_names:
+    default_font_name = config.ui.get("font_name")
+else:
+    default_font_name = font_names[0]
+set_session_state("font_name", default_font_name)
+
+set_session_state("subtitle_position", "bottom")
+set_session_state("custom_position", "70.0")
+set_session_state("text_fore_color", config.ui.get("text_fore_color", "#FFFFFF"))
+set_session_state("font_size", config.ui.get("font_size", 60))
+set_session_state("stroke_color", "#000000")
+set_session_state("stroke_width", 1.5)
 
 
 st.write(tr("Get Help"))
@@ -438,7 +484,83 @@ left_panel = panel[0]
 middle_panel = panel[1]
 right_panel = panel[2]
 
-params = VideoParams(video_subject="")
+# Select options
+
+video_languages = {
+    "": tr("Auto Detect"),
+    **{value: value for _, value in enumerate(support_locales)},
+}
+
+video_concat_modes = {
+    "sequential": tr("Sequential"),
+    "random": tr("Random"),
+}
+
+video_sources = {
+    "pexels": tr("Pexels"),
+    "pixabay": tr("Pixabay"),
+    "local": tr("Local file"),
+    "douyin": tr("TikTok"),
+    "bilibili": tr("Bilibili"),
+    "xiaohongshu": tr("Xiaohongshu"),
+}
+
+# 视频转场模式
+video_transition_modes = {
+    VideoTransitionMode.none.value: tr("None"),
+    VideoTransitionMode.shuffle.value: tr("Shuffle"),
+    VideoTransitionMode.fade_in.value: tr("FadeIn"),
+    VideoTransitionMode.fade_out.value: tr("FadeOut"),
+    VideoTransitionMode.slide_in.value: tr("SlideIn"),
+    VideoTransitionMode.slide_out.value: tr("SlideOut"),
+}
+
+video_aspect_ratios = {
+    VideoAspect.portrait.value: tr("Portrait"),
+    VideoAspect.landscape.value: tr("Landscape"),
+}
+
+bgm_options = {
+    "": tr("No Background Music"),
+    "random": tr("Random Background Music"),
+    "custom": tr("Custom Background Music"),
+}
+
+subtitle_positions = {
+    "top": tr("Top"),
+    "center": tr("Center"),
+    "bottom": tr("Bottom"),
+    "custom": tr("Custom"),
+}
+
+
+# video generate params
+params = VideoParams(
+    video_subject=st.session_state.get("video_subject"),
+    video_script=st.session_state.get("video_script"),
+    video_terms=st.session_state.get("video_terms"),
+    video_aspect=st.session_state.get("video_aspect"),
+    video_concat_mode=st.session_state.get("video_concat_mode"),
+    video_transition_mode=st.session_state.get("video_transition_mode"),
+    video_clip_duration=st.session_state.get("video_clip_duration"),
+    video_count=st.session_state.get("video_count"),
+    video_source=st.session_state.get("video_source"),
+    video_language=st.session_state.get("video_language"),
+    voice_name=st.session_state.get("voice_name"),
+    voice_volume=st.session_state.get("voice_volume"),
+    voice_rate=st.session_state.get("voice_rate"),
+    bgm_type=st.session_state.get("bgm_type"),
+    bgm_file=st.session_state.get("bgm_file"),
+    bgm_volume=st.session_state.get("bgm_volume"),
+    subtitle_enabled=st.session_state.get("subtitle_enabled"),
+    subtitle_position=st.session_state.get("subtitle_position"),
+    custom_position=st.session_state.get("custom_position"),
+    font_name=st.session_state.get("font_name"),
+    text_fore_color=st.session_state.get("text_fore_color"),
+    font_size=st.session_state.get("font_size"),
+    stroke_color=st.session_state.get("stroke_color"),
+    stroke_width=st.session_state.get("stroke_width"),
+)
 uploaded_files = []
 
 with left_panel:
@@ -448,23 +570,12 @@ with left_panel:
             tr("Video Subject"), key="video_subject"
         ).strip()
 
-        video_languages = [
-            (tr("Auto Detect"), ""),
-        ]
-        for code in support_locales:
-            video_languages.append((code, code))
-
-        selected_index = st.selectbox(
+        params.video_language = st.selectbox(
             tr("Script Language"),
-            index=0,
-            options=range(
-                len(video_languages)
-            ),  # Use the index as the internal option value
-            format_func=lambda x: video_languages[x][
-                0
-            ],  # The label is displayed to the user
+            key="video_language",
+            options=video_languages.keys(),
+            format_func=lambda x: video_languages[x],
         )
-        params.video_language = video_languages[selected_index][1]
 
         if st.button(
             tr("Generate Video Script and Keywords"), key="auto_generate_script"
@@ -482,7 +593,7 @@ with left_panel:
                     st.session_state["video_script"] = script
                     st.session_state["video_terms"] = ", ".join(terms)
         params.video_script = st.text_area(
-            tr("Video Script"), value=st.session_state["video_script"], height=280
+            tr("Video Script"), key="video_script", height=280
         )
         if st.button(tr("Generate Video Keywords"), key="auto_generate_terms"):
             if not params.video_script:
@@ -496,39 +607,18 @@ with left_panel:
                 else:
                     st.session_state["video_terms"] = ", ".join(terms)
 
-        params.video_terms = st.text_area(
-            tr("Video Keywords"), value=st.session_state["video_terms"]
-        )
+        params.video_terms = st.text_area(tr("Video Keywords"), key="video_terms")
 
 with middle_panel:
     with st.container(border=True):
         st.write(tr("Video Settings"))
-        video_concat_modes = [
-            (tr("Sequential"), "sequential"),
-            (tr("Random"), "random"),
-        ]
-        video_sources = [
-            (tr("Pexels"), "pexels"),
-            (tr("Pixabay"), "pixabay"),
-            (tr("Local file"), "local"),
-            (tr("TikTok"), "douyin"),
-            (tr("Bilibili"), "bilibili"),
-            (tr("Xiaohongshu"), "xiaohongshu"),
-        ]
 
-        saved_video_source_name = config.app.get("video_source", "pexels")
-        saved_video_source_index = [v[1] for v in video_sources].index(
-            saved_video_source_name
-        )
-
-        selected_index = st.selectbox(
+        params.video_source = st.selectbox(
             tr("Video Source"),
-            options=range(len(video_sources)),
-            format_func=lambda x: video_sources[x][0],
-            index=saved_video_source_index,
+            options=video_sources.keys(),
+            format_func=lambda x: video_sources[x],
+            key="video_source",
         )
-        params.video_source = video_sources[selected_index][1]
-        config.app["video_source"] = params.video_source
 
         if params.video_source == "local":
             _supported_types = FILE_TYPE_VIDEOS + FILE_TYPE_IMAGES
@@ -538,61 +628,35 @@ with middle_panel:
                 accept_multiple_files=True,
             )
 
-        selected_index = st.selectbox(
+        params.video_concat_mode = st.selectbox(
             tr("Video Concat Mode"),
-            index=1,
-            options=range(
-                len(video_concat_modes)
-            ),  # Use the index as the internal option value
-            format_func=lambda x: video_concat_modes[x][
-                0
-            ],  # The label is displayed to the user
-        )
-        params.video_concat_mode = VideoConcatMode(
-            video_concat_modes[selected_index][1]
+            options=video_concat_modes.keys(),
+            format_func=lambda x: video_concat_modes[x],
+            key="video_concat_mode",
         )
 
-        # 视频转场模式
-        video_transition_modes = [
-            (tr("None"), VideoTransitionMode.none.value),
-            (tr("Shuffle"), VideoTransitionMode.shuffle.value),
-            (tr("FadeIn"), VideoTransitionMode.fade_in.value),
-            (tr("FadeOut"), VideoTransitionMode.fade_out.value),
-            (tr("SlideIn"), VideoTransitionMode.slide_in.value),
-            (tr("SlideOut"), VideoTransitionMode.slide_out.value),
-        ]
-        selected_index = st.selectbox(
+        params.video_transition_mode = st.selectbox(
             tr("Video Transition Mode"),
-            options=range(len(video_transition_modes)),
-            format_func=lambda x: video_transition_modes[x][0],
-            index=0,
+            options=video_transition_modes.keys(),
+            format_func=lambda x: video_transition_modes[x],
+            key="video_transition_mode",
         )
-        params.video_transition_mode = VideoTransitionMode(
-            video_transition_modes[selected_index][1]
-        )
-
-        video_aspect_ratios = [
-            (tr("Portrait"), VideoAspect.portrait.value),
-            (tr("Landscape"), VideoAspect.landscape.value),
-        ]
-        selected_index = st.selectbox(
+        params.video_aspect = st.selectbox(
             tr("Video Ratio"),
-            options=range(
-                len(video_aspect_ratios)
-            ),  # Use the index as the internal option value
-            format_func=lambda x: video_aspect_ratios[x][
-                0
-            ],  # The label is displayed to the user
+            options=video_aspect_ratios.keys(),
+            format_func=lambda x: video_aspect_ratios[x],
+            key="video_aspect",
         )
-        params.video_aspect = VideoAspect(video_aspect_ratios[selected_index][1])
 
         params.video_clip_duration = st.selectbox(
-            tr("Clip Duration"), options=[2, 3, 4, 5, 6, 7, 8, 9, 10], index=1
+            tr("Clip Duration"),
+            options=[2, 3, 4, 5, 6, 7, 8, 9, 10],
+            key="video_clip_duration",
         )
         params.video_count = st.selectbox(
             tr("Number of Videos Generated Simultaneously"),
             options=[1, 2, 3, 4, 5],
-            index=0,
+            key="video_count",
         )
     with st.container(border=True):
         st.write(tr("Audio Settings"))
@@ -600,37 +664,11 @@ with middle_panel:
         # tts_providers = ['edge', 'azure']
         # tts_provider = st.selectbox(tr("TTS Provider"), tts_providers)
 
-        voices = voice.get_all_azure_voices(filter_locals=support_locales)
-        friendly_names = {
-            v: v.replace("Female", tr("Female"))
-            .replace("Male", tr("Male"))
-            .replace("Neural", "")
-            for v in voices
-        }
-        saved_voice_name = config.ui.get("voice_name", "")
-        saved_voice_name_index = 0
-        if saved_voice_name in friendly_names:
-            saved_voice_name_index = list(friendly_names.keys()).index(saved_voice_name)
-        else:
-            for i, v in enumerate(voices):
-                if (
-                    v.lower().startswith(st.session_state["ui_language"].lower())
-                    and "V2" not in v
-                ):
-                    saved_voice_name_index = i
-                    break
-
-        selected_friendly_name = st.selectbox(
+        params.voice_name = st.selectbox(
             tr("Speech Synthesis"),
             options=list(friendly_names.values()),
-            index=saved_voice_name_index,
+            key="voice_name",
         )
-
-        voice_name = list(friendly_names.keys())[
-            list(friendly_names.values()).index(selected_friendly_name)
-        ]
-        params.voice_name = voice_name
-        config.ui["voice_name"] = voice_name
 
         if st.button(tr("Play Voice")):
             play_content = params.video_subject
@@ -643,7 +681,7 @@ with middle_panel:
                 audio_file = os.path.join(temp_dir, f"tmp-voice-{str(uuid4())}.mp3")
                 sub_maker = voice.tts(
                     text=play_content,
-                    voice_name=voice_name,
+                    voice_name=params.voice_name,
                     voice_rate=params.voice_rate,
                     voice_file=audio_file,
                 )
@@ -652,7 +690,7 @@ with middle_panel:
                     play_content = "This is a example voice. if you hear this, the voice synthesis failed with the original content."
                     sub_maker = voice.tts(
                         text=play_content,
-                        voice_name=voice_name,
+                        voice_name=params.voice_name,
                         voice_rate=params.voice_rate,
                         voice_file=audio_file,
                     )
@@ -662,7 +700,7 @@ with middle_panel:
                     if os.path.exists(audio_file):
                         os.remove(audio_file)
 
-        if voice.is_azure_v2_voice(voice_name):
+        if params.voice_name is not None and voice.is_azure_v2_voice(params.voice_name):
             saved_azure_speech_region = config.azure.get("speech_region", "")
             saved_azure_speech_key = config.azure.get("speech_key", "")
             azure_speech_region = st.text_input(
@@ -677,32 +715,21 @@ with middle_panel:
         params.voice_volume = st.selectbox(
             tr("Speech Volume"),
             options=[0.6, 0.8, 1.0, 1.2, 1.5, 2.0, 3.0, 4.0, 5.0],
-            index=2,
+            key="voice_volume",
         )
 
         params.voice_rate = st.selectbox(
             tr("Speech Rate"),
             options=[0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.5, 1.8, 2.0],
-            index=2,
+            key="voice_rate",
         )
 
-        bgm_options = [
-            (tr("No Background Music"), ""),
-            (tr("Random Background Music"), "random"),
-            (tr("Custom Background Music"), "custom"),
-        ]
-        selected_index = st.selectbox(
+        params.bgm_type = st.selectbox(
             tr("Background Music"),
-            index=1,
-            options=range(
-                len(bgm_options)
-            ),  # Use the index as the internal option value
-            format_func=lambda x: bgm_options[x][
-                0
-            ],  # The label is displayed to the user
+            options=bgm_options.keys(),
+            format_func=lambda x: bgm_options[x],
+            key="bgm_type",
         )
-        # Get the selected background music type
-        params.bgm_type = bgm_options[selected_index][1]
 
         # Show or hide components based on the selection
         if params.bgm_type == "custom":
@@ -713,40 +740,27 @@ with middle_panel:
         params.bgm_volume = st.selectbox(
             tr("Background Music Volume"),
             options=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-            index=2,
+            key="bgm_volume",
         )
 
 with right_panel:
     with st.container(border=True):
         st.write(tr("Subtitle Settings"))
-        params.subtitle_enabled = st.checkbox(tr("Enable Subtitles"), value=True)
-        font_names = get_all_fonts()
-        saved_font_name = config.ui.get("font_name", "")
-        saved_font_name_index = 0
-        if saved_font_name in font_names:
-            saved_font_name_index = font_names.index(saved_font_name)
-        params.font_name = st.selectbox(
-            tr("Font"), font_names, index=saved_font_name_index
+        params.subtitle_enabled = st.checkbox(
+            tr("Enable Subtitles"), key="subtitle_enabled"
         )
-        config.ui["font_name"] = params.font_name
+        params.font_name = st.selectbox(tr("Font"), font_names, key="font_name")
 
-        subtitle_positions = [
-            (tr("Top"), "top"),
-            (tr("Center"), "center"),
-            (tr("Bottom"), "bottom"),
-            (tr("Custom"), "custom"),
-        ]
-        selected_index = st.selectbox(
+        params.subtitle_position = st.selectbox(
             tr("Position"),
-            index=2,
-            options=range(len(subtitle_positions)),
-            format_func=lambda x: subtitle_positions[x][0],
+            options=subtitle_positions.keys(),
+            format_func=lambda x: subtitle_positions[x],
+            key="subtitle_position",
         )
-        params.subtitle_position = subtitle_positions[selected_index][1]
 
         if params.subtitle_position == "custom":
             custom_position = st.text_input(
-                tr("Custom Position (% from top)"), value="70.0"
+                tr("Custom Position (% from top)"), key="custom_position"
             )
             try:
                 params.custom_position = float(custom_position)
@@ -757,22 +771,22 @@ with right_panel:
 
         font_cols = st.columns([0.3, 0.7])
         with font_cols[0]:
-            saved_text_fore_color = config.ui.get("text_fore_color", "#FFFFFF")
             params.text_fore_color = st.color_picker(
-                tr("Font Color"), saved_text_fore_color
+                tr("Font Color"), key="text_fore_color"
             )
-            config.ui["text_fore_color"] = params.text_fore_color
 
         with font_cols[1]:
-            saved_font_size = config.ui.get("font_size", 60)
-            params.font_size = st.slider(tr("Font Size"), 30, 100, saved_font_size)
-            config.ui["font_size"] = params.font_size
+            params.font_size = st.slider(tr("Font Size"), 30, 100, key="font_size")
 
         stroke_cols = st.columns([0.3, 0.7])
         with stroke_cols[0]:
-            params.stroke_color = st.color_picker(tr("Stroke Color"), "#000000")
+            params.stroke_color = st.color_picker(
+                tr("Stroke Color"), key="text_stroke_color"
+            )
         with stroke_cols[1]:
-            params.stroke_width = st.slider(tr("Stroke Width"), 0.0, 10.0, 1.5)
+            params.stroke_width = st.slider(
+                tr("Stroke Width"), 0.0, 10.0, key="text_stroke_width"
+            )
 
 start_button = st.button(tr("Generate Video"), use_container_width=True, type="primary")
 if start_button:
