@@ -471,7 +471,10 @@ with left_panel:
                 script = llm.generate_script(
                     video_subject=params.video_subject, language=params.video_language
                 )
-                terms = llm.generate_terms(params.video_subject, script)
+                if params.video_source != "local":
+                    terms = llm.generate_terms(params.video_subject, script)
+                else:
+                    terms = ""
                 if "Error: " in script:
                     st.error(tr(script))
                 elif "Error: " in terms:
