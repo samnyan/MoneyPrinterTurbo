@@ -1,15 +1,27 @@
 import os
-import platform
 import sys
 from uuid import uuid4
 
 import streamlit as st
 from loguru import logger
+from app.utils.utils import get_all_fonts, open_task_folder, root_dir
 
-# Add the root directory of the project to the system path to allow importing modules from the project
-root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
+from webui.i18n import LOCALES, tr
+
+from webui.const import (
+    BGM_OPTIONS,
+    SUBTITLE_POSITIONS,
+    SUPPORT_LOCALES,
+    VIDEO_ASPECT_RATIOS,
+    VIDEO_CONCAT_MODES,
+    VIDEO_LANGUAGES,
+    VIDEO_SOURCES,
+    VIDEO_TRANSITION_MODES,
+)
+
+print(root_dir())
+if root_dir() not in sys.path:
+    sys.path.append(root_dir())
     print("******** sys.path ********")
     print(sys.path)
     print("")
@@ -48,56 +60,6 @@ hide_streamlit_style = """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 st.title(f"MoneyPrinterTurbo v{config.project_version}")
 
-support_locales = [
-    "zh-CN",
-    "zh-HK",
-    "zh-TW",
-    "de-DE",
-    "en-US",
-    "fr-FR",
-    "vi-VN",
-    "th-TH",
-]
-
-font_dir = os.path.join(root_dir, "resource", "fonts")
-song_dir = os.path.join(root_dir, "resource", "songs")
-i18n_dir = os.path.join(root_dir, "webui", "i18n")
-config_file = os.path.join(root_dir, "webui", ".streamlit", "webui.toml")
-system_locale = utils.get_system_locale()
-# print(f"******** system locale: {system_locale} ********")
-
-
-def get_all_fonts():
-    fonts = []
-    for root, dirs, files in os.walk(font_dir):
-        for file in files:
-            if file.endswith(".ttf") or file.endswith(".ttc"):
-                fonts.append(file)
-    fonts.sort()
-    return fonts
-
-
-def get_all_songs():
-    songs = []
-    for root, dirs, files in os.walk(song_dir):
-        for file in files:
-            if file.endswith(".mp3"):
-                songs.append(file)
-    return songs
-
-
-def open_task_folder(task_id):
-    try:
-        sys = platform.system()
-        path = os.path.join(root_dir, "storage", "tasks", task_id)
-        if os.path.exists(path):
-            if sys == "Windows":
-                os.system(f"start {path}")
-            if sys == "Darwin":
-                os.system(f"open {path}")
-    except Exception as e:
-        logger.error(e)
-
 
 def scroll_to_bottom():
     js = """
@@ -124,12 +86,12 @@ def init_log():
         # 获取日志记录中的文件全路径
         file_path = record["file"].path
         # 将绝对路径转换为相对于项目根目录的路径
-        relative_path = os.path.relpath(file_path, root_dir)
+        relative_path = os.path.relpath(file_path, root_dir())
         # 更新记录中的文件路径
         record["file"].path = f"./{relative_path}"
         # 返回修改后的格式字符串
         # 您可以根据需要调整这里的格式
-        record["message"] = record["message"].replace(root_dir, ".")
+        record["message"] = record["message"].replace(root_dir(), ".")
 
         _format = (
             "<green>{time:%Y-%m-%d %H:%M:%S}</> | "
@@ -150,14 +112,6 @@ def init_log():
 
 init_log()
 
-locales = utils.load_locales(i18n_dir)
-
-
-def tr(key):
-    loc = locales.get(st.session_state["ui_language"], {})
-    return loc.get("Translation", {}).get(key, key)
-
-
 font_names = get_all_fonts()
 
 
@@ -168,7 +122,7 @@ def set_session_state(name, default=None):
 
 # Initialize session state
 
-set_session_state("ui_language", config.ui.get("language", system_locale))
+set_session_state("ui_language", config.ui.get("language", utils.get_system_locale()))
 
 set_session_state("video_subject", "")
 set_session_state("video_script", "")
@@ -181,7 +135,7 @@ set_session_state("video_aspect", VideoAspect.portrait.value)
 set_session_state("video_clip_duration", 3)
 set_session_state("video_count", 1)
 
-voices = voice.get_all_azure_voices(filter_locals=support_locales)
+voices = voice.get_all_azure_voices(filter_locals=SUPPORT_LOCALES)
 friendly_names = {
     v: v.replace("Female", tr("Female"))
     .replace("Male", tr("Male"))
@@ -228,8 +182,8 @@ if not config.app.get("hide_config", False):
         with left_config_panel:
             display_languages = []
             selected_index = 0
-            for i, code in enumerate(locales.keys()):
-                display_languages.append(f"{code} - {locales[code].get('Language')}")
+            for i, code in enumerate(LOCALES.keys()):
+                display_languages.append(f"{code} - {LOCALES[code].get('Language')}")
                 if code == st.session_state["ui_language"]:
                     selected_index = i
 
@@ -484,55 +438,6 @@ left_panel = panel[0]
 middle_panel = panel[1]
 right_panel = panel[2]
 
-# Select options
-
-video_languages = {
-    "": tr("Auto Detect"),
-    **{value: value for _, value in enumerate(support_locales)},
-}
-
-video_concat_modes = {
-    "sequential": tr("Sequential"),
-    "random": tr("Random"),
-}
-
-video_sources = {
-    "pexels": tr("Pexels"),
-    "pixabay": tr("Pixabay"),
-    "local": tr("Local file"),
-    "douyin": tr("TikTok"),
-    "bilibili": tr("Bilibili"),
-    "xiaohongshu": tr("Xiaohongshu"),
-}
-
-# 视频转场模式
-video_transition_modes = {
-    VideoTransitionMode.none.value: tr("None"),
-    VideoTransitionMode.shuffle.value: tr("Shuffle"),
-    VideoTransitionMode.fade_in.value: tr("FadeIn"),
-    VideoTransitionMode.fade_out.value: tr("FadeOut"),
-    VideoTransitionMode.slide_in.value: tr("SlideIn"),
-    VideoTransitionMode.slide_out.value: tr("SlideOut"),
-}
-
-video_aspect_ratios = {
-    VideoAspect.portrait.value: tr("Portrait"),
-    VideoAspect.landscape.value: tr("Landscape"),
-}
-
-bgm_options = {
-    "": tr("No Background Music"),
-    "random": tr("Random Background Music"),
-    "custom": tr("Custom Background Music"),
-}
-
-subtitle_positions = {
-    "top": tr("Top"),
-    "center": tr("Center"),
-    "bottom": tr("Bottom"),
-    "custom": tr("Custom"),
-}
-
 
 # video generate params
 params = VideoParams(
@@ -573,8 +478,8 @@ with left_panel:
         params.video_language = st.selectbox(
             tr("Script Language"),
             key="video_language",
-            options=video_languages.keys(),
-            format_func=lambda x: video_languages[x],
+            options=VIDEO_LANGUAGES.keys(),
+            format_func=lambda x: VIDEO_LANGUAGES[x],
         )
 
         if st.button(
@@ -615,8 +520,8 @@ with middle_panel:
 
         params.video_source = st.selectbox(
             tr("Video Source"),
-            options=video_sources.keys(),
-            format_func=lambda x: video_sources[x],
+            options=VIDEO_SOURCES.keys(),
+            format_func=lambda x: VIDEO_SOURCES[x],
             key="video_source",
         )
 
@@ -630,21 +535,21 @@ with middle_panel:
 
         params.video_concat_mode = st.selectbox(
             tr("Video Concat Mode"),
-            options=video_concat_modes.keys(),
-            format_func=lambda x: video_concat_modes[x],
+            options=VIDEO_CONCAT_MODES.keys(),
+            format_func=lambda x: VIDEO_CONCAT_MODES[x],
             key="video_concat_mode",
         )
 
         params.video_transition_mode = st.selectbox(
             tr("Video Transition Mode"),
-            options=video_transition_modes.keys(),
-            format_func=lambda x: video_transition_modes[x],
+            options=VIDEO_TRANSITION_MODES.keys(),
+            format_func=lambda x: VIDEO_TRANSITION_MODES[x],
             key="video_transition_mode",
         )
         params.video_aspect = st.selectbox(
             tr("Video Ratio"),
-            options=video_aspect_ratios.keys(),
-            format_func=lambda x: video_aspect_ratios[x],
+            options=VIDEO_ASPECT_RATIOS.keys(),
+            format_func=lambda x: VIDEO_ASPECT_RATIOS[x],
             key="video_aspect",
         )
 
@@ -726,8 +631,8 @@ with middle_panel:
 
         params.bgm_type = st.selectbox(
             tr("Background Music"),
-            options=bgm_options.keys(),
-            format_func=lambda x: bgm_options[x],
+            options=BGM_OPTIONS.keys(),
+            format_func=lambda x: BGM_OPTIONS[x],
             key="bgm_type",
         )
 
@@ -753,8 +658,8 @@ with right_panel:
 
         params.subtitle_position = st.selectbox(
             tr("Position"),
-            options=subtitle_positions.keys(),
-            format_func=lambda x: subtitle_positions[x],
+            options=SUBTITLE_POSITIONS.keys(),
+            format_func=lambda x: SUBTITLE_POSITIONS[x],
             key="subtitle_position",
         )
 

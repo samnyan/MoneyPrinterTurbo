@@ -2,6 +2,7 @@ import json
 import locale
 import os
 import threading
+import platform
 from typing import Any
 from uuid import uuid4
 
@@ -120,6 +121,10 @@ def public_dir(sub_dir: str = ""):
     return d
 
 
+def i18n_dir():
+    return os.path.join(root_dir(), "webui", "i18n")
+
+
 def run_in_background(func, *args, **kwargs):
     def run():
         try:
@@ -227,3 +232,35 @@ def load_locales(i18n_dir):
 
 def parse_extension(filename):
     return os.path.splitext(filename)[1].strip().lower().replace(".", "")
+
+
+def get_all_fonts():
+    fonts = []
+    for root, dirs, files in os.walk(font_dir()):
+        for file in files:
+            if file.endswith(".ttf") or file.endswith(".ttc"):
+                fonts.append(file)
+    fonts.sort()
+    return fonts
+
+
+def get_all_songs():
+    songs = []
+    for root, dirs, files in os.walk(song_dir()):
+        for file in files:
+            if file.endswith(".mp3"):
+                songs.append(file)
+    return songs
+
+
+def open_task_folder(task_id):
+    try:
+        sys = platform.system()
+        path = task_dir(task_id)
+        if os.path.exists(path):
+            if sys == "Windows":
+                os.system(f"start {path}")
+            if sys == "Darwin":
+                os.system(f"open {path}")
+    except Exception as e:
+        logger.error(e)
