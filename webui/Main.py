@@ -66,14 +66,16 @@ config_file = os.path.join(root_dir, "webui", ".streamlit", "webui.toml")
 system_locale = utils.get_system_locale()
 # print(f"******** system locale: {system_locale} ********")
 
-if "video_subject" not in st.session_state:
-    st.session_state["video_subject"] = ""
-if "video_script" not in st.session_state:
-    st.session_state["video_script"] = ""
-if "video_terms" not in st.session_state:
-    st.session_state["video_terms"] = ""
-if "ui_language" not in st.session_state:
-    st.session_state["ui_language"] = config.ui.get("language", system_locale)
+
+def set_session_state(name, default=""):
+    if name not in st.session_state:
+        st.session_state[name] = default
+
+
+set_session_state("video_subject")
+set_session_state("video_script")
+set_session_state("video_terms")
+set_session_state("ui_language", config.ui.get("language", system_locale))
 
 
 def get_all_fonts():
@@ -443,7 +445,7 @@ with left_panel:
     with st.container(border=True):
         st.write(tr("Video Script Settings"))
         params.video_subject = st.text_input(
-            tr("Video Subject"), value=st.session_state["video_subject"]
+            tr("Video Subject"), key="video_subject"
         ).strip()
 
         video_languages = [
