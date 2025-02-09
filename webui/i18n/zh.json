@@ -63,6 +63,8 @@
     "Generating Audio": "正在生成语音",
     "Generating Subtitle": "正在生成字幕",
     "Getting Video Materials": "正在准备视频素材",
+    "Searching Videos": "正在搜索视频",
+    "Downloading Videos": "正在下载视频",
     "Generating Final Videos": "正在生成最终视频",
     "Video Generation Completed": "视频生成完成",
     "Video Generation Failed": "视频生成失败",

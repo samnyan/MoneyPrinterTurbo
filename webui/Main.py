@@ -788,5 +788,6 @@ if start_button:
     open_task_folder(task_id)
     logger.info(tr("Video Generation Completed"))
     scroll_to_bottom()
+    progress_text.success(tr("Video Generation Completed"))
 
 config.save_config()

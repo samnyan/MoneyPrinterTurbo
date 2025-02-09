@@ -123,7 +123,9 @@ def generate_subtitle(task_id, params, video_script, sub_maker, audio_file):
     return subtitle_path
 
 
-def get_video_materials(task_id, params, video_terms, audio_duration):
+def get_video_materials(
+    task_id, params, video_terms, audio_duration, progress_callback=None
+):
     if params.video_source == "local":
         logger.info("\n\n## preprocess local materials")
         materials = video.preprocess_video(
@@ -146,6 +148,7 @@ def get_video_materials(task_id, params, video_terms, audio_duration):
             video_contact_mode=params.video_concat_mode,
             audio_duration=audio_duration * params.video_count,
             max_clip_duration=params.video_clip_duration,
+            progress_callback=progress_callback,
         )
         if not downloaded_videos:
             sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
@@ -291,9 +294,13 @@ def start(task_id, params: VideoParams, stop_at: str = "video", progress_callbac
 
     # 5. Get video materials
     if progress_callback:
-        progress_callback(60, "Getting Video Materials")
+        progress_callback(50, "Getting Video Materials")
     downloaded_videos = get_video_materials(
-        task_id, params, video_terms, audio_duration
+        task_id,
+        params,
+        video_terms,
+        audio_duration,
+        progress_callback=progress_callback,
     )
     if not downloaded_videos:
         sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)

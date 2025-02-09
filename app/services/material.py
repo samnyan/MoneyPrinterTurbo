@@ -202,6 +202,7 @@ def download_videos(
     video_contact_mode: VideoConcatMode = VideoConcatMode.random,
     audio_duration: float = 0.0,
     max_clip_duration: int = 5,
+    progress_callback=None,
 ) -> List[str]:
     valid_video_items = []
     valid_video_urls = []
@@ -210,6 +211,8 @@ def download_videos(
     if source == "pixabay":
         search_videos = search_videos_pixabay
 
+    if progress_callback:
+        progress_callback(55, "Searching Videos")
     for search_term in search_terms:
         video_items = search_videos(
             search_term=search_term,
@@ -239,8 +242,10 @@ def download_videos(
         random.shuffle(valid_video_items)
 
     total_duration = 0.0
-    for item in valid_video_items:
+    for index, item in enumerate(valid_video_items):
         try:
+            if progress_callback:
+                progress_callback(60, "Downloading Videos", index + 1)
             logger.info(f"downloading video: {item.url}")
             saved_video_path = save_video(
                 video_url=item.url, save_dir=material_directory
