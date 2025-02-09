@@ -144,7 +144,7 @@ friendly_names = {
 }
 default_voice_name = friendly_names.get("zh-CN-XiaoxiaoNeural-Female", None)
 if config.ui.get("voice_name", "") in friendly_names:
-    default_voice_name = friendly_names.get(config.ui.get("voice_name"))
+    default_voice_name = config.ui.get("voice_name")
 set_session_state("voice_name", default_voice_name)
 
 set_session_state("voice_volume", 1.0)
@@ -579,7 +579,8 @@ with middle_panel:
 
         params.voice_name = st.selectbox(
             tr("Speech Synthesis"),
-            options=list(friendly_names.values()),
+            options=friendly_names.keys(),
+            format_func=lambda x: friendly_names.get(x),
             key="voice_name",
         )
 
