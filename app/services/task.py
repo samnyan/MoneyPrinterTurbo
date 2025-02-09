@@ -207,7 +207,7 @@ def generate_final_videos(
     return final_video_paths, combined_video_paths
 
 
-def start(task_id, params: VideoParams, stop_at: str = "video"):
+def start(task_id, params: VideoParams, stop_at: str = "video", progress_callback=None):
     logger.info(f"start task: {task_id}, stop_at: {stop_at}")
     sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=5)
 
@@ -215,6 +215,8 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         params.video_concat_mode = VideoConcatMode(params.video_concat_mode)
 
     # 1. Generate script
+    if progress_callback:
+        progress_callback(5, "Generating Video Script")
     video_script = generate_script(task_id, params)
     if not video_script or "Error: " in video_script:
         sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
@@ -229,6 +231,8 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         return {"script": video_script}
 
     # 2. Generate terms
+    if progress_callback:
+        progress_callback(10, "Generating Terms")
     video_terms = ""
     if params.video_source != "local":
         video_terms = generate_terms(task_id, params, video_script)
@@ -247,6 +251,8 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
     sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=20)
 
     # 3. Generate audio
+    if progress_callback:
+        progress_callback(20, "Generating Audio")
     audio_file, audio_duration, sub_maker = generate_audio(
         task_id, params, video_script
     )
@@ -254,7 +260,7 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
         return
 
-    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=30)
+    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=40)
 
     if stop_at == "audio":
         sm.state.update_task(
@@ -266,6 +272,8 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         return {"audio_file": audio_file, "audio_duration": audio_duration}
 
     # 4. Generate subtitle
+    if progress_callback:
+        progress_callback(40, "Generating Subtitle")
     subtitle_path = generate_subtitle(
         task_id, params, video_script, sub_maker, audio_file
     )
@@ -279,9 +287,11 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         )
         return {"subtitle_path": subtitle_path}
 
-    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=40)
+    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=60)
 
     # 5. Get video materials
+    if progress_callback:
+        progress_callback(60, "Getting Video Materials")
     downloaded_videos = get_video_materials(
         task_id, params, video_terms, audio_duration
     )
@@ -298,9 +308,11 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         )
         return {"materials": downloaded_videos}
 
-    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=50)
+    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=80)
 
     # 6. Generate final videos
+    if progress_callback:
+        progress_callback(80, "Generating Final Videos")
     final_video_paths, combined_video_paths = generate_final_videos(
         task_id, params, downloaded_videos, audio_file, subtitle_path
     )

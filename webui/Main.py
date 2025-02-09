@@ -703,26 +703,38 @@ with right_panel:
             )
 
 start_button = st.button(tr("Generate Video"), use_container_width=True, type="primary")
+error_box = st.empty()
+
+# 添加进度条组件
+progress_bar = st.progress(0)
+progress_text = st.empty()
+
+
+def update_progress(progress, message, text=None):
+    progress_bar.progress(progress)
+    progress_text.text(tr(message) + (f" - {text}" if text else ""))
+
+
 if start_button:
     config.save_config()
     task_id = str(uuid4())
     if not params.video_subject and not params.video_script:
-        st.error(tr("Video Script and Subject Cannot Both Be Empty"))
+        error_box.error(tr("Video Script and Subject Cannot Both Be Empty"))
         scroll_to_bottom()
         st.stop()
 
     if params.video_source not in ["pexels", "pixabay", "local"]:
-        st.error(tr("Please Select a Valid Video Source"))
+        error_box.error(tr("Please Select a Valid Video Source"))
         scroll_to_bottom()
         st.stop()
 
     if params.video_source == "pexels" and not config.app.get("pexels_api_keys", ""):
-        st.error(tr("Please Enter the Pexels API Key"))
+        error_box.error(tr("Please Enter the Pexels API Key"))
         scroll_to_bottom()
         st.stop()
 
     if params.video_source == "pixabay" and not config.app.get("pixabay_api_keys", ""):
-        st.error(tr("Please Enter the Pixabay API Key"))
+        error_box.error(tr("Please Enter the Pixabay API Key"))
         scroll_to_bottom()
         st.stop()
 
@@ -756,15 +768,15 @@ if start_button:
     logger.info(utils.to_json(params))
     scroll_to_bottom()
 
-    result = tm.start(task_id=task_id, params=params)
+    result = tm.start(task_id=task_id, params=params, progress_callback=update_progress)
     if not result or "videos" not in result:
-        st.error(tr("Video Generation Failed"))
+        error_box.error(tr("Video Generation Failed"))
         logger.error(tr("Video Generation Failed"))
         scroll_to_bottom()
         st.stop()
 
     video_files = result.get("videos", [])
-    st.success(tr("Video Generation Completed"))
+    error_box.success(tr("Video Generation Completed"))
     try:
         if video_files:
             player_cols = st.columns(len(video_files) * 2 + 1)
