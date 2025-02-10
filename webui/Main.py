@@ -541,7 +541,7 @@ with middle_panel:
         if params.video_source == "local":
             _supported_types = FILE_TYPE_VIDEOS + FILE_TYPE_IMAGES
             uploaded_files = st.file_uploader(
-                "Upload Local Files",
+                tr("Upload Local Files"),
                 type=["mp4", "mov", "avi", "flv", "mkv", "jpg", "jpeg", "png"],
                 accept_multiple_files=True,
             )
