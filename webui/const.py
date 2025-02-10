@@ -36,17 +36,17 @@ VIDEO_CONCAT_MODES = {
 
 # 视频转场模式
 VIDEO_TRANSITION_MODES = {
-    VideoTransitionMode.none.value: tr("None"),
-    VideoTransitionMode.shuffle.value: tr("Shuffle"),
-    VideoTransitionMode.fade_in.value: tr("FadeIn"),
-    VideoTransitionMode.fade_out.value: tr("FadeOut"),
-    VideoTransitionMode.slide_in.value: tr("SlideIn"),
-    VideoTransitionMode.slide_out.value: tr("SlideOut"),
+    VideoTransitionMode.none: tr("None"),
+    VideoTransitionMode.shuffle: tr("Shuffle"),
+    VideoTransitionMode.fade_in: tr("FadeIn"),
+    VideoTransitionMode.fade_out: tr("FadeOut"),
+    VideoTransitionMode.slide_in: tr("SlideIn"),
+    VideoTransitionMode.slide_out: tr("SlideOut"),
 }
 
 VIDEO_ASPECT_RATIOS = {
-    VideoAspect.portrait.value: tr("Portrait"),
-    VideoAspect.landscape.value: tr("Landscape"),
+    VideoAspect.portrait: tr("Portrait"),
+    VideoAspect.landscape: tr("Landscape"),
 }
 
 BGM_OPTIONS = {

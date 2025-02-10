@@ -19,7 +19,6 @@ from webui.const import (
     VIDEO_TRANSITION_MODES,
 )
 
-print(root_dir())
 if root_dir() not in sys.path:
     sys.path.append(root_dir())
     print("******** sys.path ********")
@@ -130,8 +129,8 @@ set_session_state("video_terms", "")
 set_session_state("video_language", "")
 set_session_state("video_source", "pexels")
 set_session_state("video_concat_mode", "random")
-set_session_state("video_transition_mode", VideoTransitionMode.none.value)
-set_session_state("video_aspect", VideoAspect.portrait.value)
+set_session_state("video_transition_mode", VideoTransitionMode.none)
+set_session_state("video_aspect", VideoAspect.portrait)
 set_session_state("video_clip_duration", 3)
 set_session_state("video_count", 1)
 

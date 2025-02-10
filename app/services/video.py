@@ -55,6 +55,7 @@ def combine_videos(
     video_transition_mode: VideoTransitionMode = None,
     max_clip_duration: int = 5,
     threads: int = 2,
+    progress_callback=None,
 ) -> str:
     audio_clip = AudioFileClip(audio_file)
     audio_duration = audio_clip.duration
@@ -168,6 +169,8 @@ def combine_videos(
     video_clip = concatenate_videoclips(clips)
     video_clip = video_clip.with_fps(30)
     logger.info("writing")
+    if progress_callback:
+        progress_callback(60, "Writing Combined Videos")
     # https://github.com/harry0703/MoneyPrinterTurbo/issues/111#issuecomment-2032354030
     video_clip.write_videofile(
         filename=combined_video_path,
@@ -246,6 +249,7 @@ def generate_video(
     subtitle_path: str,
     output_file: str,
     params: VideoParams,
+    progress_callback=None,
 ):
     aspect = VideoAspect(params.video_aspect)
     video_width, video_height = aspect.to_resolution()
@@ -347,6 +351,9 @@ def generate_video(
             logger.error(f"failed to add bgm: {str(e)}")
 
     video_clip = video_clip.with_audio(audio_clip)
+
+    if progress_callback:
+        progress_callback(70, "Generating Final Videos")
     video_clip.write_videofile(
         output_file,
         audio_codec="aac",
