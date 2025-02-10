@@ -126,12 +126,17 @@ set_session_state("ui_language", config.ui.get("language", utils.get_system_loca
 set_session_state("video_subject", "")
 set_session_state("video_script", "")
 set_session_state("video_terms", "")
-set_session_state("video_language", "")
-set_session_state("video_source", "pexels")
-set_session_state("video_concat_mode", "random")
-set_session_state("video_transition_mode", VideoTransitionMode.none)
-set_session_state("video_aspect", VideoAspect.portrait)
-set_session_state("video_clip_duration", 3)
+set_session_state("video_language", config.ui.get("video_language", ""))
+set_session_state("video_source", config.ui.get("video_source", "pexels"))
+set_session_state("video_concat_mode", config.ui.get("video_concat_mode", "random"))
+set_session_state(
+    "video_transition_mode",
+    VideoTransitionMode[config.ui.get("video_transition_mode", "none")],
+)
+set_session_state(
+    "video_aspect", VideoAspect[config.ui.get("video_aspect", "portrait")]
+)
+set_session_state("video_clip_duration", config.ui.get("video_clip_duration", 3))
 set_session_state("video_count", 1)
 
 voices = voice.get_all_azure_voices(filter_locals=SUPPORT_LOCALES)
@@ -142,16 +147,17 @@ friendly_names = {
     for v in voices
 }
 default_voice_name = friendly_names.get("zh-CN-XiaoxiaoNeural-Female", None)
-if config.ui.get("voice_name", "") in friendly_names:
-    default_voice_name = config.ui.get("voice_name")
+saved_voice_name = config.ui.get("voice_name", "")
+if saved_voice_name in friendly_names:
+    default_voice_name = saved_voice_name
 set_session_state("voice_name", default_voice_name)
 
-set_session_state("voice_volume", 1.0)
-set_session_state("voice_rate", 1.0)
+set_session_state("voice_volume", config.ui.get("voice_volume", 1.0))
+set_session_state("voice_rate", config.ui.get("voice_rate", 1.0))
 
-set_session_state("bgm_type", "random")
-set_session_state("bgm_volume", 0.2)
-set_session_state("subtitle_enabled", True)
+set_session_state("bgm_type", config.ui.get("bgm_type", "random"))
+set_session_state("bgm_volume", config.ui.get("bgm_volume", 0.2))
+set_session_state("subtitle_enabled", config.ui.get("subtitle_enabled", True))
 
 default_font_name = None
 if config.ui.get("font_name", None) in font_names:
@@ -160,12 +166,12 @@ else:
     default_font_name = font_names[0]
 set_session_state("font_name", default_font_name)
 
-set_session_state("subtitle_position", "bottom")
-set_session_state("custom_position", "70.0")
+set_session_state("subtitle_position", config.ui.get("subtitle_position", "bottom"))
+set_session_state("custom_position", config.ui.get("custom_position", "70.0"))
 set_session_state("text_fore_color", config.ui.get("text_fore_color", "#FFFFFF"))
 set_session_state("font_size", config.ui.get("font_size", 60))
-set_session_state("stroke_color", "#000000")
-set_session_state("stroke_width", 1.5)
+set_session_state("stroke_color", config.ui.get("stroke_color", "#000000"))
+set_session_state("stroke_width", config.ui.get("stroke_width", 1.5))
 
 
 st.write(tr("Get Help"))
