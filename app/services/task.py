@@ -355,6 +355,8 @@ def start(task_id, params: VideoParams, stop_at: str = "video", progress_callbac
     sm.state.update_task(
         task_id, state=const.TASK_STATE_COMPLETE, progress=100, **kwargs
     )
+    if progress_callback:
+        progress_callback(100, "Generating Final Videos")
     return kwargs
 
 

@@ -705,8 +705,10 @@ start_button = st.button(tr("Generate Video"), use_container_width=True, type="p
 error_box = st.empty()
 
 # 添加进度条组件
-progress_bar = st.progress(0)
+progress_bar = st.empty()
 progress_text = st.empty()
+
+video_container = st.empty()
 
 
 def update_progress(progress, message, text=None):
@@ -750,7 +752,7 @@ if start_button:
                     params.video_materials = []
                 params.video_materials.append(m)
 
-    log_container = st.empty()
+    log_container = st.container(height=400)
     log_records = []
 
     def log_received(msg):
@@ -775,12 +777,21 @@ if start_button:
         st.stop()
 
     video_files = result.get("videos", [])
-    error_box.success(tr("Video Generation Completed"))
     try:
         if video_files:
-            player_cols = st.columns(len(video_files) * 2 + 1)
+            player_cols = video_container.columns(len(video_files) * 2 + 1)
             for i, url in enumerate(video_files):
-                player_cols[i * 2 + 1].video(url)
+                with player_cols[i * 2 + 1]:
+                    st.video(url)
+                    with open(url, "rb") as f:
+                        st.download_button(
+                            label=tr("Download Video"),
+                            data=f,
+                            mime="video/mp4",
+                            type="primary",
+                            icon="⬇️",
+                            use_container_width=True,
+                        )
     except Exception:
         pass
 
